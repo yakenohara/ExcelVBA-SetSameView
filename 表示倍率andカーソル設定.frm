@@ -14,6 +14,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
+
 Public status As Integer
 
 Const defaultMag As Integer = 100
@@ -33,6 +34,29 @@ Private Sub BtnDefault_Click()
     Call setDefault
     
 End Sub
+
+Private Sub BtnNowView_Click()
+    
+    Me.TextBoxMag = ActiveWindow.Zoom
+
+    Me.TextBoxFocus = ActiveWindow.VisibleRange(1).Address(False, False)
+    
+    Me.TextBoxCursor = Selection(1).Address(False, False)
+    
+    If Me.TextBoxCursor = Me.TextBoxFocus Then
+        Me.CheckBoxSameAsFocus.Value = True
+        Me.TextBoxCursor.Enabled = False
+        
+    Else
+        Me.CheckBoxSameAsFocus.Value = False
+        Me.TextBoxCursor.Enabled = True
+    
+    End If
+    
+    Call BtnSelectNowSht_Click
+
+End Sub
+
 
 Private Sub btnOK_Click()
     status = vbOK
@@ -91,33 +115,28 @@ Private Sub UserForm_Activate()
     '変数
     Dim didFound As Boolean
     
-    didFound = False
+    'シート名再設定
+    tmpStr = ComboBoxFocusShtNames.Text
+    Me.ComboBoxFocusShtNames.Clear
     
-    'シート名検索
+    counter = 0
     For Each sht In Sheets
         
-        If Me.ComboBoxFocusShtNames.Text = sht.Name Then
+        Me.ComboBoxFocusShtNames.AddItem sht.Name
+        
+        If tmpStr = sht.Name Then
             didFound = True
-            Exit For
+            Me.ComboBoxFocusShtNames.ListIndex = counter
+            
         End If
+        
+        counter = counter + 1
         
     Next
     
-    'シートが見つからなかった場合
     If Not (didFound) Then
-        
-        'コンボボックスの初期化
-        
-        Me.ComboBoxFocusShtNames.Clear
-        
-        For Each sht In Sheets
-            
-            Me.ComboBoxFocusShtNames.AddItem sht.Name
-            
-        Next
-        
         Me.ComboBoxFocusShtNames.ListIndex = 0
-        
+    
     End If
     
 End Sub
