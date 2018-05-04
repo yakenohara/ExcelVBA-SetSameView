@@ -36,12 +36,26 @@ Private Sub BtnDefault_Click()
 End Sub
 
 Private Sub BtnNowView_Click()
+
+    Dim cautionMessage As String: cautionMessage = "セルが選択(カーソル)されていません。" & vbLf & vbLf & _
+                                                   "セルが選択(カーソル)されていない場合のカーソル位置は、" & vbLf & _
+                                                   "現在のフォーカス位置左上になります。"
     
     Me.TextBoxMag = ActiveWindow.Zoom
 
     Me.TextBoxFocus = ActiveWindow.VisibleRange(1).Address(False, False)
     
-    Me.TextBoxCursor = Selection(1).Address(False, False)
+    If (Selection Is Nothing) Or (Not (TypeName(Selection) = "Range")) Then
+        
+        retVal = MsgBox(Prompt:=cautionMessage, Buttons:=vbExclamation)
+        
+        Me.TextBoxCursor = Me.TextBoxFocus
+        
+    Else
+        
+        Me.TextBoxCursor = Selection.Address(False, False)
+        
+    End If
     
     If Me.TextBoxCursor = Me.TextBoxFocus Then
         Me.CheckBoxSameAsFocus.Value = True
