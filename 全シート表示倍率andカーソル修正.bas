@@ -6,6 +6,8 @@ Sub 全シート表示倍率andカーソル修正()
     Dim defaultSheet As Object
     Dim dispMag As Integer
     Dim focus As String
+    Dim cursor As String
+    Dim focusSht As String
     
     表示倍率andカーソル設定.Show
     
@@ -25,7 +27,8 @@ Sub 全シート表示倍率andカーソル修正()
     
     'フォーカス位置取得
     focus = 表示倍率andカーソル設定.TextBoxFocus
-    
+    cursor = 表示倍率andカーソル設定.TextBoxCursor
+    focusSht = 表示倍率andカーソル設定.ComboBoxFocusShtNames.Text
     Application.ScreenUpdating = False
     
     
@@ -39,8 +42,9 @@ Sub 全シート表示倍率andカーソル修正()
         ActiveWindow.ScrollColumn = Range(focus).Column
         Range(focus).Select
         ActiveWindow.Zoom = dispMag
+        Range(cursor).Select
     Next s
-    Worksheets(1).Activate
+    Worksheets(focusSht).Activate
     
     Application.ScreenUpdating = True
     MsgBox "Done!"
