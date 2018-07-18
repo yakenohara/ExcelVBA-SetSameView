@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} SetSameViewFormMod 
    Caption         =   "表示倍率andカーソル設定"
-   ClientHeight    =   4080
+   ClientHeight    =   4935
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   6165
@@ -92,6 +92,12 @@ Private Sub BtnSelectNowSht_Click()
         counter = counter + 1
         
     Next
+    
+End Sub
+
+Private Sub BtnSelect1stSht_Click()
+    
+    Me.ComboBoxFocusShtNames.ListIndex = 0
     
 End Sub
 
