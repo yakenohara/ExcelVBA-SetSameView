@@ -1,5 +1,5 @@
-Attribute VB_Name = "全シート表示倍率andカーソル修正"
-Sub 全シート表示倍率andカーソル修正()
+Attribute VB_Name = "SetSameView"
+Sub SetSameView()
 
     '変数宣言
     Dim s As Object
@@ -9,13 +9,13 @@ Sub 全シート表示倍率andカーソル修正()
     Dim cursor As String
     Dim focusSht As String
     
-    表示倍率andカーソル設定.Show
+    SetSameViewFormMod.Show
     
     'フォーム状態確認
-    If 表示倍率andカーソル設定.status <> vbOK Then
+    If SetSameViewFormMod.status <> vbOK Then
         Exit Sub
     
-    ElseIf Not (IsNumeric(表示倍率andカーソル設定.TextBoxMag)) Then
+    ElseIf Not (IsNumeric(SetSameViewFormMod.TextBoxMag)) Then
         MsgBox "指定表示倍率は数値として無効です"
         Exit Sub
     
@@ -23,12 +23,12 @@ Sub 全シート表示倍率andカーソル修正()
                                       
     '表示倍率の取得
     On Error GoTo whenOverFlowOccurred
-    dispMag = CInt(表示倍率andカーソル設定.TextBoxMag)
+    dispMag = CInt(SetSameViewFormMod.TextBoxMag)
     
     'フォーカス位置取得
-    focus = 表示倍率andカーソル設定.TextBoxFocus
-    cursor = 表示倍率andカーソル設定.TextBoxCursor
-    focusSht = 表示倍率andカーソル設定.ComboBoxFocusShtNames.Text
+    focus = SetSameViewFormMod.TextBoxFocus
+    cursor = SetSameViewFormMod.TextBoxCursor
+    focusSht = SetSameViewFormMod.ComboBoxFocusShtNames.Text
     Application.ScreenUpdating = False
     
     
