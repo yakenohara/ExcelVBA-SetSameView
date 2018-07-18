@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} SetSameViewFormMod 
    Caption         =   "SetSameView"
-   ClientHeight    =   5850
+   ClientHeight    =   6570
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   6360
+   ClientWidth     =   5130
    OleObjectBlob   =   "SetSameViewFormMod.frx":0000
    StartUpPosition =   1  'オーナー フォームの中央
 End
@@ -186,5 +186,7 @@ Private Sub setDefault()
     Next
     
     Me.ComboBoxFocusShtNames.ListIndex = 0
+    
+    Me.CheckBoxEveryBook.Value = False
     
 End Sub
