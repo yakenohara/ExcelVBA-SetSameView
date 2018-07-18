@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} SetSameViewFormMod 
-   Caption         =   "表示倍率andカーソル設定"
-   ClientHeight    =   4935
+   Caption         =   "SetSameView"
+   ClientHeight    =   5850
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   6165
+   ClientWidth     =   6360
    OleObjectBlob   =   "SetSameViewFormMod.frx":0000
    StartUpPosition =   1  'オーナー フォームの中央
 End
@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 
 
 
