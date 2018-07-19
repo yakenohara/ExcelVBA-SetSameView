@@ -17,6 +17,8 @@ Attribute VB_Exposed = False
 
 
 
+
+
 Public status As Integer
 
 Const defaultMag As Integer = 100

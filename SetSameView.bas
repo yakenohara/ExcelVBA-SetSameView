@@ -102,6 +102,8 @@ Sub SetSameView()
     
     Next bk
     
+    toActiveBk.Activate
+    
     Application.ScreenUpdating = True
     MsgBox "Done!"
     
