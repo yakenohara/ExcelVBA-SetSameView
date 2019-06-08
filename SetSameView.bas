@@ -89,13 +89,31 @@ Sub SetSameView()
             If closerToA1 Then
             
                 If ActiveWindow.FreezePanes Then 'ウィンドウ枠固定が有効の場合
-                    Set p1 = ActiveWindow.Panes(1)
-                    Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
-                    Set p4_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1)
                     
-                    focus = p4_topLeftCell.Address
-                    cursor = p4_topLeftCell.Address
+                    'unfreezed pain 範囲のの左上セルのアドレスを算出
+                    
+                    Dim px_topLeftCell As Range
+                    
+                    If ActiveWindow.Panes.Count = 4 Then '画面4分割の場合
+                        Set p1 = ActiveWindow.Panes(1)
+                        Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
+                        Set px_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1)
+                        
+                    Else '2分割の場合
+                    
+                        If ActiveWindow.SplitRow = 0 Then '左右2分割の場合(ActiveWindow.SplitColumn = 0 の場合)
+                            Set px_topLeftCell = Cells(1, ActiveWindow.Column + 1)
+                        
+                        Else '上下2分割の場合
+                            Set px_topLeftCell = Cells(ActiveWindow.SplitRow + 1, 1)
+                            
+                        End If
+                    
+                    End If
                 
+                    focus = px_topLeftCell.Address
+                    cursor = px_topLeftCell.Address
+                    
                 Else
                     focus = "A1"
                     cursor = "A1"

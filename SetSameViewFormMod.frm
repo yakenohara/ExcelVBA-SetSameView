@@ -64,7 +64,49 @@ Private Sub BtnNowView_Click()
         
     End If
     
-    If Me.TextBoxCursor = Me.TextBoxFocus Then
+    topLeftAddress = defaultFocus
+    If ActiveWindow.FreezePanes Then 'freeze pain 有効の場合
+    
+        'unfreezed pain 範囲のの左上セルのアドレスを算出
+        
+        Dim px_topLeftCell As Range
+        
+        If ActiveWindow.Panes.Count = 4 Then '画面4分割の場合
+            Set p1 = ActiveWindow.Panes(1)
+            Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
+            Set px_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1)
+            
+        Else '2分割の場合
+        
+            If ActiveWindow.SplitRow = 0 Then '左右2分割の場合(ActiveWindow.SplitColumn = 0 の場合)
+                Set px_topLeftCell = Cells(1, ActiveWindow.Column + 1)
+            
+            Else '上下2分割の場合
+                Set px_topLeftCell = Cells(ActiveWindow.SplitRow + 1, 1)
+                
+            End If
+        
+        End If
+        
+        topLeftAddress = px_topLeftCell.Address(False, False)
+        
+    End If
+    
+    If topLeftAddress = Me.TextBoxCursor And _
+        topLeftAddress = Me.TextBoxFocus Then '表示範囲左上が選択されている場合
+        
+        Me.CheckBoxCloserToA1.Value = True
+        
+        Me.CheckBoxSameAsFocus.Value = True
+        Me.CheckBoxSameAsFocus.Enabled = False
+                
+        Me.TextBoxFocus = defaultFocus
+        Me.TextBoxFocus.Enabled = False
+        
+        Me.TextBoxCursor = defaultFocus
+        Me.TextBoxCursor.Enabled = False
+    
+    ElseIf Me.TextBoxCursor = Me.TextBoxFocus Then
         Me.CheckBoxSameAsFocus.Value = True
         Me.TextBoxCursor.Enabled = False
         
