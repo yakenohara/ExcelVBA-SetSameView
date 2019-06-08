@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} SetSameViewFormMod 
    Caption         =   "SetSameView"
-   ClientHeight    =   6570
+   ClientHeight    =   8265.001
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   5130
+   ClientWidth     =   5610
    OleObjectBlob   =   "SetSameViewFormMod.frx":0000
    StartUpPosition =   1  'オーナー フォームの中央
 End
@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 
 
 
@@ -46,6 +47,8 @@ Private Sub BtnNowView_Click()
                                                    "現在のフォーカス位置左上になります。"
     
     Me.TextBoxMag = ActiveWindow.Zoom
+    
+    Me.CheckBoxCloserToA1.Value = False
 
     Me.TextBoxFocus = ActiveWindow.VisibleRange(1).Address(False, False)
     
@@ -101,6 +104,32 @@ End Sub
 Private Sub BtnSelect1stSht_Click()
     
     Me.ComboBoxFocusShtNames.ListIndex = 0
+    
+End Sub
+
+Private Sub CheckBoxCloserToA1_Change()
+    
+    If Me.CheckBoxCloserToA1.Value Then
+        
+        Me.CheckBoxSameAsFocus.Enabled = False
+        
+        Me.TextBoxFocus = defaultFocus
+        Me.TextBoxFocus.Enabled = False
+        
+        Me.TextBoxCursor = defaultFocus
+        Me.TextBoxCursor.Enabled = False
+        
+        
+    Else
+    
+        Me.CheckBoxSameAsFocus.Enabled = True
+        Me.TextBoxFocus.Enabled = True
+        
+        If Not (Me.CheckBoxSameAsFocus) Then
+            Me.TextBoxCursor.Enabled = True
+        End If
+        
+    End If
     
 End Sub
 
@@ -171,8 +200,11 @@ Private Sub setDefault()
     status = vbCancel
     
     Me.TextBoxMag = defaultMag
+    Me.CheckBoxCloserToA1.Value = True
     Me.TextBoxFocus = defaultFocus
+    Me.TextBoxFocus.Enabled = False
     Me.CheckBoxSameAsFocus.Value = True
+    Me.CheckBoxSameAsFocus.Enabled = False
     Me.TextBoxCursor = defaultFocus
     Me.TextBoxCursor.Enabled = False
     Me.TextBoxMag.SetFocus

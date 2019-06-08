@@ -23,6 +23,7 @@ Sub SetSameView()
     '変数宣言
     Dim s As Object
     Dim dispMag As Integer
+    Dim closerToA1 As Boolean
     Dim focus As String
     Dim cursor As String
     Dim focusSht As String
@@ -44,6 +45,8 @@ Sub SetSameView()
     '表示倍率の取得
     On Error GoTo whenOverFlowOccurred
     dispMag = CInt(SetSameViewFormMod.TextBoxMag)
+    
+    closerToA1 = SetSameViewFormMod.CheckBoxCloserToA1
     
     'フォーカス位置取得
     focus = SetSameViewFormMod.TextBoxFocus
@@ -78,12 +81,33 @@ Sub SetSameView()
         shtFound = False
         
         For Each s In bk.Sheets
+            
             s.Activate
+            
+            ActiveWindow.Zoom = dispMag
+            
+            If closerToA1 Then
+            
+                If ActiveWindow.FreezePanes Then 'ウィンドウ枠固定が有効の場合
+                    Set p1 = ActiveWindow.Panes(1)
+                    Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
+                    Set p4_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1)
+                    
+                    focus = p4_topLeftCell.Address
+                    cursor = p4_topLeftCell.Address
+                
+                Else
+                    focus = "A1"
+                    cursor = "A1"
+                
+                End If
+                
+            End If
+            
             ActiveWindow.ScrollRow = Range(focus).Row
             ActiveWindow.ScrollColumn = Range(focus).Column
-            Range(focus).Select
-            ActiveWindow.Zoom = dispMag
             Range(cursor).Select
+            
             
             If s.Name = focusSht Then
                 shtFound = True
@@ -123,4 +147,10 @@ whenZoomFailed:
     Exit Sub
     
 End Sub
+
+
+
+
+
+
 
