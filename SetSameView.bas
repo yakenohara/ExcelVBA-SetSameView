@@ -36,7 +36,7 @@ Sub SetSameView()
     If SetSameViewFormMod.status <> vbOK Then
         Exit Sub
     
-    ElseIf Not (IsNumeric(SetSameViewFormMod.TextBoxMag)) Then
+    ElseIf Not (IsNumeric(SetSameViewFormMod.txtbx_zoom_level)) Then
         MsgBox "指定表示倍率は数値として無効です"
         Exit Sub
     
@@ -44,19 +44,19 @@ Sub SetSameView()
                                       
     '表示倍率の取得
     On Error GoTo whenOverFlowOccurred
-    dispMag = CInt(SetSameViewFormMod.TextBoxMag)
+    dispMag = CInt(SetSameViewFormMod.txtbx_zoom_level)
     
-    closerToA1 = SetSameViewFormMod.CheckBoxCloserToA1
+    closerToA1 = SetSameViewFormMod.chkbx_top_left
     
     'フォーカス位置取得
-    focus = SetSameViewFormMod.TextBoxFocus
-    cursor = SetSameViewFormMod.TextBoxCursor
-    focusSht = SetSameViewFormMod.ComboBoxFocusShtNames.Text
+    focus = SetSameViewFormMod.txtbx_top_left_address_of_view
+    cursor = SetSameViewFormMod.txtbx_range_address_to_select
+    focusSht = SetSameViewFormMod.cmbbx_sheet_name_to_activate.Text
     Application.ScreenUpdating = False
     
     Set books = New Collection
     
-    If SetSameViewFormMod.CheckBoxEveryBook.Value Then 'すべてのブック処理の場合
+    If SetSameViewFormMod.chkbx_all_books.Value Then 'すべてのブック処理の場合
         
         For Each wbk In Workbooks
             If Windows(wbk.Name).Visible Then 'Visible == ture なWorkBookのみ処理する
@@ -165,6 +165,8 @@ whenZoomFailed:
     Exit Sub
     
 End Sub
+
+
 
 
 
