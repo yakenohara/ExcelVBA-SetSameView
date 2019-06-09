@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 '<License>------------------------------------------------------------
 '
 ' Copyright (c) 2019 Shinnosuke Yakenohara
@@ -187,51 +188,35 @@ Private Sub buttn_set_all_as_current_Click()
     
     Me.chkbx_top_left.Value = False
 
+    'todo グラフだけを表示しているシートを表示中の場合にコケる
     Me.txtbx_top_left_address_of_view = ActiveWindow.VisibleRange(1).Address(False, False)
     
     If (Selection Is Nothing) Or (Not (TypeName(Selection) = "Range")) Then
     
-        Dim cautionMessage As String
-        cautionMessage = _
-            "Any cell or range is not selected. " & vbCrLf & _
-            "top left cell address of active window `" & Me.txtbx_top_left_address_of_view & "` will be set."
-    
         str_range_address_to_select = ""
     
-        If (Selection Is Nothing) Then
+        Set selectionRange = getRangeFromSelectionObj(Selection)
         
+        If (selectionRange Is Nothing) Then 'Selection の cell 占有領域の算出ができなかった場合
             retVal = MsgBox( _
-                Prompt:=cautionMessage, _
+                Prompt:= _
+                    "Any cell or range is not selected. " & vbCrLf & _
+                    "top left cell address of active window `" & Me.txtbx_top_left_address_of_view & "` will be set.", _
                 Buttons:=vbExclamation _
             )
             
             str_range_address_to_select = Me.txtbx_top_left_address_of_view.Value
             
-        Else
-        
-            Set selectionRange = getRangeFromSelectionObj(Selection)
+        Else 'Selection の cell 占有領域の算出ができた場合
             
-            If (selectionRange Is Nothing) Then 'selection object does not have .TopLeftCell or .BottomRightCell property
-                retVal = MsgBox( _
-                    Prompt:=cautionMessage, _
-                    Buttons:=vbExclamation _
-                )
+            str_range_address_to_select = selectionRange.Address(False, False)
                 
-                str_range_address_to_select = Me.txtbx_top_left_address_of_view.Value
-                
-            Else ' selection object が占めるセル選択範囲の取得に成功した場合
-                
-                str_range_address_to_select = selectionRange.Address(False, False)
-                cautionMessage = _
+            retVal = MsgBox( _
+                Prompt:= _
                     "Object type `" & TypeName(Selection) & "` selected. " & vbCrLf & _
-                    "Coccupied range address by that selection `" & str_range_address_to_select & "` will be set."
-                    
-                retVal = MsgBox( _
-                    Prompt:=cautionMessage, _
-                    Buttons:=vbExclamation _
-                )
-                
-            End If
+                    "Coccupied range address by that selection `" & str_range_address_to_select & "` will be set.", _
+                Buttons:=vbExclamation _
+            )
             
         End If
         
@@ -257,10 +242,15 @@ Private Sub buttn_set_all_as_current_Click()
             
         Else '2分割の場合
         
-            If ActiveWindow.SplitRow = 0 Then '左右2分割の場合(ActiveWindow.SplitColumn = 0 の場合)
-                Set px_topLeftCell = Cells(1, ActiveWindow.Column + 1)
+            If ActiveWindow.SplitRow = 0 Then '左右2分割の場合
+                'todo ActiveWindow.Panes(1).VisibleRange の右上のセルの一つ右のセルにする
+'                Set p1 = ActiveWindow.Panes(1)
+'                Set xx = p1.VisibleRange
+'                Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
+                Set px_topLeftCell = Cells(1, ActiveWindow.SplitColumn + 1)
             
-            Else '上下2分割の場合
+            Else '上下2分割の場合 (ActiveWindow.SplitColumn = 0 の場合)
+                'todo ActiveWindow.Panes(1).VisibleRange の左下のセルの一つ下のセルにする
                 Set px_topLeftCell = Cells(ActiveWindow.SplitRow + 1, 1)
                 
             End If
@@ -359,13 +349,16 @@ End Sub
 
 '
 ' オブジェクトのCell選択範囲を Range object にして返す
-'
+' 取得できなかった場合は Nothing を返す
 '
 Private Function getRangeFromSelectionObj(ByVal selectionObj As Object) As Variant
 
     Dim ret As Variant
     
-    If (TypeName(selectionObj)) = "Range" Then ' Range オブジェyクトの場合
+    If selectionObj Is Nothing Then
+        Set ret = Nothing ' Nothing を返す
+    
+    ElseIf (TypeName(selectionObj)) = "Range" Then ' Range オブジェyクトの場合
         Set ret = selectionObj 'そのまま返す
     
     Else ' Range オブジェyクトでない場合

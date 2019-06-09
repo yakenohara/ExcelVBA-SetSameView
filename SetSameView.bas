@@ -107,10 +107,12 @@ Sub SetSameView()
                         
                     Else '2分割の場合
                     
-                        If ActiveWindow.SplitRow = 0 Then '左右2分割の場合(ActiveWindow.SplitColumn = 0 の場合)
-                            Set px_topLeftCell = Cells(1, ActiveWindow.Column + 1)
+                        If ActiveWindow.SplitRow = 0 Then '左右2分割の場合
+                            'todo ActiveWindow.Panes(1).VisibleRange の右上のセルの一つ右のセルにする
+                            Set px_topLeftCell = Cells(1, ActiveWindow.SplitColumn + 1)
                         
-                        Else '上下2分割の場合
+                        Else '上下2分割の場合 (ActiveWindow.SplitColumn = 0 の場合)
+                            'todo ActiveWindow.Panes(1).VisibleRange の左下のセルの一つ下のセルにする
                             Set px_topLeftCell = Cells(ActiveWindow.SplitRow + 1, 1)
                             
                         End If
@@ -166,6 +168,7 @@ C_INT_FUNC_OVERFLOWED:
     Exit Sub
     
 ZOOM_FAILED:
+    'todo グラフだけを表示しているシートを表示中の場合にここにきてしまう
     Application.ScreenUpdating = True
     retOfMsg = MsgBox( _
         "Exception occurred. As a cause, Specified display magnification or cursor format may be invalid", _
