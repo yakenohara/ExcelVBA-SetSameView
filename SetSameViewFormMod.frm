@@ -182,10 +182,6 @@ End Sub
 '
 Private Sub buttn_set_all_as_current_Click()
 
-    Dim cautionMessage As String: cautionMessage = "セルが選択(カーソル)されていません。" & vbLf & vbLf & _
-                                                   "セルが選択(カーソル)されていない場合のカーソル位置は、" & vbLf & _
-                                                   "現在のフォーカス位置左上になります。"
-    
     Me.txtbx_zoom_level = ActiveWindow.Zoom
     
     Me.chkbx_top_left.Value = False
@@ -193,10 +189,52 @@ Private Sub buttn_set_all_as_current_Click()
     Me.txtbx_top_left_address_of_view = ActiveWindow.VisibleRange(1).Address(False, False)
     
     If (Selection Is Nothing) Or (Not (TypeName(Selection) = "Range")) Then
+    
+        Dim cautionMessage As String
+        cautionMessage = _
+            "Any cell or range is not selected. " & vbCrLf & _
+            "top left cell address of active window `" & Me.txtbx_top_left_address_of_view & "` will be set."
+    
+        str_range_address_to_select = ""
+    
+        If (Selection Is Nothing) Then
         
-        retVal = MsgBox(Prompt:=cautionMessage, Buttons:=vbExclamation)
+            retVal = MsgBox( _
+                Prompt:=cautionMessage, _
+                Buttons:=vbExclamation _
+            )
+            
+            str_range_address_to_select = Me.txtbx_top_left_address_of_view.Value
+            
+        Else
         
-        Me.txtbx_range_address_to_select = Me.txtbx_top_left_address_of_view
+            Set selectionRange = getRangeFromSelectionObj(Selection)
+            
+            If (selectionRange Is Nothing) Then 'selection object does not have .TopLeftCell or .BottomRightCell property
+                retVal = MsgBox( _
+                    Prompt:=cautionMessage, _
+                    Buttons:=vbExclamation _
+                )
+                
+                str_range_address_to_select = Me.txtbx_top_left_address_of_view.Value
+                
+            Else ' selection object が占めるセル選択範囲の取得に成功した場合
+                
+                str_range_address_to_select = selectionRange.Address(False, False)
+                cautionMessage = _
+                    "Object type `" & TypeName(Selection) & "` selected. " & vbCrLf & _
+                    "Coccupied range address by that selection `" & str_range_address_to_select & "` will be set."
+                    
+                retVal = MsgBox( _
+                    Prompt:=cautionMessage, _
+                    Buttons:=vbExclamation _
+                )
+                
+            End If
+            
+        End If
+        
+        Me.txtbx_range_address_to_select = str_range_address_to_select
         
     Else
         
@@ -313,4 +351,34 @@ Private Sub setDefault()
     
 End Sub
 
+'
+' オブジェクトのCell選択範囲を Range object にして返す
+'
+'
+Private Function getRangeFromSelectionObj(ByVal selectionObj As Object) As Variant
+
+    Dim ret As Variant
+    
+    If (TypeName(selectionObj)) = "Range" Then ' Range オブジェyクトの場合
+        Set ret = selectionObj 'そのまま返す
+    
+    Else ' Range オブジェyクトでない場合
+        On Error GoTo TOP_LEFT_CELL_IS_NOT_DEFINED
+        'TopLeftCell, BottomRightCell property を使って範囲を取得する
+        Set ret = Range(selectionObj.TopLeftCell, selectionObj.BottomRightCell)
+    
+    End If
+    
+    Set getRangeFromSelectionObj = ret
+    Exit Function
+    
+TOP_LEFT_CELL_IS_NOT_DEFINED:
+    Set ret = Nothing
+    Set getRangeFromSelectionObj = ret
+    Exit Function
+    
+End Function
+
 '----------------------------------------------------------------------------</Common>
+
+
