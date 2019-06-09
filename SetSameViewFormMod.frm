@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} SetSameViewFormMod 
    Caption         =   "SetSameView"
-   ClientHeight    =   8010
+   ClientHeight    =   8250.001
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   5955
+   ClientWidth     =   5970
    OleObjectBlob   =   "SetSameViewFormMod.frx":0000
    StartUpPosition =   1  'オーナー フォームの中央
 End
@@ -36,6 +36,7 @@ Public hided_in As Integer
 
 Const DEFAULT_ZOOM_LEVEL As Integer = 100
 Const DEFAULT_ADDRESS_TO_SELECT As String = "A1"
+Const DEFAULT_MINIMIZE_RIBBON As Boolean = True
 
 '<Life cycle of Form>-----------------------------------------------------------------------------
 
@@ -294,7 +295,11 @@ Private Sub buttn_set_all_as_current_Click()
     
     End If
     
-    Call buttn_set_sht_current_Click
+    Call buttn_set_sht_current_Click '現在選択中のシート名を選択
+    
+    'リボンの表示 / 非表示状態の反映
+    bool_ribbon_is_minimized = Application.CommandBars.GetPressedMso("MinimizeRibbon")
+    Me.chkbx_minimize_ribbon.Value = bool_ribbon_is_minimized
 
 End Sub
 
@@ -347,6 +352,7 @@ Private Sub setDefault()
     
     Me.cmbbx_sheet_name_to_activate.ListIndex = 0
     
+    Me.chkbx_minimize_ribbon.Value = DEFAULT_MINIMIZE_RIBBON
     Me.chkbx_all_books.Value = False
     
 End Sub

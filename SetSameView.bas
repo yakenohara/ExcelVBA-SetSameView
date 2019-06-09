@@ -27,7 +27,7 @@ Sub SetSameView()
     Dim str_top_left_address_of_view As String
     Dim str_range_address_to_select As String
     Dim str_sheet_name_to_activate As String
-    Dim collection_opened_books As Collection
+    Dim collection_books_to_operate As Collection
     Dim obj_book_to_activate As Workbook
     
     SetSameViewFormMod.Show
@@ -54,18 +54,18 @@ Sub SetSameView()
     str_sheet_name_to_activate = SetSameViewFormMod.cmbbx_sheet_name_to_activate.Text
     Application.ScreenUpdating = False
     
-    Set collection_opened_books = New Collection
+    Set collection_books_to_operate = New Collection
     
     If SetSameViewFormMod.chkbx_all_books.Value Then 'すべてのブック処理の場合
         
         For Each wbk In Workbooks
             If Windows(wbk.Name).Visible Then 'Visible == ture なWorkBookのみ処理する
-                collection_opened_books.Add wbk
+                collection_books_to_operate.Add wbk
             End If
         Next
     
     Else 'AcriveWorkBookのみの場合
-        collection_opened_books.Add ActiveWorkbook
+        collection_books_to_operate.Add ActiveWorkbook
         
     End If
     
@@ -74,9 +74,15 @@ Sub SetSameView()
     On Error GoTo ZOOM_FAILED
     Set obj_book_to_activate = ActiveWorkbook
     
-    For Each bk In collection_opened_books
+    For Each bk In collection_books_to_operate
         
         bk.Activate
+        
+        'ribbon
+        bool_ribbon_is_minimized = Application.CommandBars.GetPressedMso("MinimizeRibbon")
+        If (bool_ribbon_is_minimized <> SetSameViewFormMod.chkbx_minimize_ribbon.Value) Then 'リボンの 表示 / 非表示状態が 設定値と異なる場合
+            Application.CommandBars.ExecuteMso "MinimizeRibbon" 'リボン表示 / 非表示の切り替え
+        End If
         
         shtFound = False
         
