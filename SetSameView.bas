@@ -1,7 +1,7 @@
 Attribute VB_Name = "SetSameView"
 '<License>------------------------------------------------------------
 '
-' Copyright (c) 2018 Shinnosuke Yakenohara
+' Copyright (c) 2019 Shinnosuke Yakenohara
 '
 ' This program is free software: you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -21,72 +21,72 @@ Attribute VB_Name = "SetSameView"
 Sub SetSameView()
 
     '変数宣言
-    Dim s As Object
-    Dim dispMag As Integer
-    Dim closerToA1 As Boolean
-    Dim focus As String
-    Dim cursor As String
-    Dim focusSht As String
-    Dim books As Collection
-    Dim toActiveBk As Workbook
+    Dim obj_sheet As Object
+    Dim int_zoom_level As Integer
+    Dim bool_top_left_option_enabled As Boolean
+    Dim str_top_left_address_of_view As String
+    Dim str_range_address_to_select As String
+    Dim str_sheet_name_to_activate As String
+    Dim collection_opened_books As Collection
+    Dim obj_book_to_activate As Workbook
     
     SetSameViewFormMod.Show
     
     'フォーム状態確認
-    If SetSameViewFormMod.status <> vbOK Then
+    If SetSameViewFormMod.hided_in <> vbOK Then
         Exit Sub
     
-    ElseIf Not (IsNumeric(SetSameViewFormMod.txtbx_zoom_level)) Then
-        MsgBox "指定表示倍率は数値として無効です"
-        Exit Sub
+    ElseIf Not (IsNumeric(SetSameViewFormMod.txtbx_zoom_level.Value)) Then 'zoom level が数値型でない場合
+        retOfMsgBox = MsgBox("Invalid Zoom level type:`" & TypeName(SetSameViewFormMod.txtbx_zoom_level.Value) & "` specified", vbCritical)
+        Exit Sub '終了
     
     End If
                                       
     '表示倍率の取得
-    On Error GoTo whenOverFlowOccurred
-    dispMag = CInt(SetSameViewFormMod.txtbx_zoom_level)
+    On Error GoTo C_INT_FUNC_OVERFLOWED
+    int_zoom_level = CInt(SetSameViewFormMod.txtbx_zoom_level.Value)
     
-    closerToA1 = SetSameViewFormMod.chkbx_top_left
+    bool_top_left_option_enabled = SetSameViewFormMod.chkbx_top_left
     
     'フォーカス位置取得
-    focus = SetSameViewFormMod.txtbx_top_left_address_of_view
-    cursor = SetSameViewFormMod.txtbx_range_address_to_select
-    focusSht = SetSameViewFormMod.cmbbx_sheet_name_to_activate.Text
+    str_top_left_address_of_view = SetSameViewFormMod.txtbx_top_left_address_of_view
+    str_range_address_to_select = SetSameViewFormMod.txtbx_range_address_to_select
+    str_sheet_name_to_activate = SetSameViewFormMod.cmbbx_sheet_name_to_activate.Text
     Application.ScreenUpdating = False
     
-    Set books = New Collection
+    Set collection_opened_books = New Collection
     
     If SetSameViewFormMod.chkbx_all_books.Value Then 'すべてのブック処理の場合
         
         For Each wbk In Workbooks
             If Windows(wbk.Name).Visible Then 'Visible == ture なWorkBookのみ処理する
-                books.Add wbk
+                collection_opened_books.Add wbk
             End If
         Next
     
     Else 'AcriveWorkBookのみの場合
-        books.Add ActiveWorkbook
+        collection_opened_books.Add ActiveWorkbook
         
     End If
     
     
     'カーソル位置修正・表示倍率変更
-    On Error GoTo whenZoomFailed
-    Set toActiveBk = ActiveWorkbook
+    On Error GoTo ZOOM_FAILED
+    Set obj_book_to_activate = ActiveWorkbook
     
-    For Each bk In books
+    For Each bk In collection_opened_books
         
         bk.Activate
         
         shtFound = False
         
-        For Each s In bk.Sheets
+        For Each obj_sheet In bk.Sheets
             
-            s.Activate
+            obj_sheet.Activate
             
-            ActiveWindow.Zoom = dispMag
+            ActiveWindow.Zoom = int_zoom_level
             
-            If closerToA1 Then
+            If bool_top_left_option_enabled Then
             
                 If ActiveWindow.FreezePanes Then 'ウィンドウ枠固定が有効の場合
                     
@@ -111,31 +111,31 @@ Sub SetSameView()
                     
                     End If
                 
-                    focus = px_topLeftCell.Address
-                    cursor = px_topLeftCell.Address
+                    str_top_left_address_of_view = px_topLeftCell.Address
+                    str_range_address_to_select = px_topLeftCell.Address
                     
                 Else
-                    focus = "A1"
-                    cursor = "A1"
+                    str_top_left_address_of_view = "A1"
+                    str_range_address_to_select = "A1"
                 
                 End If
                 
             End If
             
-            ActiveWindow.ScrollRow = Range(focus).Row
-            ActiveWindow.ScrollColumn = Range(focus).Column
-            Range(cursor).Select
+            ActiveWindow.ScrollRow = Range(str_top_left_address_of_view).Row
+            ActiveWindow.ScrollColumn = Range(str_top_left_address_of_view).Column
+            Range(str_range_address_to_select).Select
             
             
-            If s.Name = focusSht Then
+            If obj_sheet.Name = str_sheet_name_to_activate Then
                 shtFound = True
             End If
             
-        Next s
+        Next obj_sheet
         
         'フォーカスシートの設定
         If shtFound Then 'フォーカスすべきシートが存在する
-            bk.Worksheets(focusSht).Activate
+            bk.Worksheets(str_sheet_name_to_activate).Activate
             
         Else 'フォーカスすべきシートが存在しない
             bk.Worksheets(1).Activate '先頭のシートを選択
@@ -144,33 +144,29 @@ Sub SetSameView()
     
     Next bk
     
-    toActiveBk.Activate
+    obj_book_to_activate.Activate
     
     Application.ScreenUpdating = True
     MsgBox "Done!"
     
     Exit Sub
     
-whenOverFlowOccurred:
-    MsgBox "Application.InputBoxメソッドで例外" & vbLf & _
-           "オーバーフローの可能性があります"
+C_INT_FUNC_OVERFLOWED:
+    retOfMsg = MsgBox( _
+        "Cannot cast into Integer specified zoom level:`" & str(SetSameViewFormMod.txtbx_zoom_level.Value) & "`", _
+        vbCritical _
+    )
     
     Exit Sub
     
-whenZoomFailed:
+ZOOM_FAILED:
     Application.ScreenUpdating = True
-    MsgBox "Window.Zoomプロパティで例外" & vbLf & _
-           "指定表示倍率かカーソル書式が不正な可能性があります"
+    retOfMsg = MsgBox( _
+        "Exception occurred. As a cause, Specified display magnification or cursor format may be invalid", _
+        vbCritical _
+    )
     
     Exit Sub
     
 End Sub
-
-
-
-
-
-
-
-
 
