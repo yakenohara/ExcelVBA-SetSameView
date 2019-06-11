@@ -32,14 +32,48 @@ Attribute VB_Exposed = False
 '
 '-----------------------------------------------------------</License>
 
-Public hided_in As Integer
-
 Const DEFAULT_ZOOM_LEVEL As Integer = 100
 Const DEFAULT_ADDRESS_TO_SELECT As String = "A1"
 Const DEFAULT_MINIMIZE_RIBBON As Boolean = True
 
+Private ended_in As Integer
+
+'<Controller>-----------------------------------------------------------------------------
+
+'
+' フォームを表示してユーザの選択内容を返却する
+'
+' 返却値型は MsgBox 関数と同じ(※) 型・意味とし、以下3種類のみを使用する
+'
+' | Constant | Value | Description                                                      |
+' | -------- | ----- | ---------------------------------------------------------------  |
+' | vbOK     | 1     | OK押下                                                           |
+' | vbCancel | 2     | Cancel押下                                                       |
+' | vbAbort  | 3     | ウィンドウ右上 `×` クリックもしくは Alt + F4 でウィドウクローズ |
+'
+' ※
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/msgbox-function
+'
+'
+Public Function showForm()
+    
+    ended_in = vbAbort 'ウィンドウ右上 `×` クリックもしくは
+        'Alt + F4 でウィドウクローズの場合はこの数値を返す
+        
+    Me.Show
+    showForm = ended_in 'ユーザー選択内容の返却
+    
+End Function
+
+'----------------------------------------------------------------------------</Controller>
+
 '<Life cycle of Form>-----------------------------------------------------------------------------
 
+'
+' FormObject の load 時
+' (呼び出し側モジュールで`SetSameViewFormMod`にアクセスした時に、load済みでなかった場合のみ)
+' に実行される
+'
 Private Sub UserForm_Initialize()
     
     Call setDefault
@@ -305,9 +339,12 @@ End Sub
 
 '
 ' `OK` button
+' この関数をバインドした Object (CommandButton Object) には `Default` プロパティに True を設定している
+' その為、他のCommandButton Objectにフォーカスがない場合に enter キーを押してもこの関数は発火する
+
 '
 Private Sub buttn_ok_Click()
-    hided_in = vbOK
+    ended_in = vbOK
     Me.Hide
     
 End Sub
@@ -315,8 +352,12 @@ End Sub
 '
 ' `CANCEL` button
 '
+' NOTE
+' この関数をバインドした Object (CommandButton Object) には `Cancel` プロパティに True を設定している
+' その為、Esc キーを押すか、ボタンにフォーカスがあるときに enter キーを押してもこの関数は発火する
+'
 Private Sub buttn_cancel_Click()
-    hided_in = vbCancel
+    ended_in = vbCancel
     Me.Hide
     
 End Sub
@@ -331,8 +372,6 @@ End Sub
 Private Sub setDefault()
     
     '初期化
-    hided_in = vbCancel
-    
     Me.txtbx_zoom_level = DEFAULT_ZOOM_LEVEL
     Me.chkbx_top_left.Value = True
     Me.txtbx_top_left_address_of_view = DEFAULT_ADDRESS_TO_SELECT
@@ -426,3 +465,5 @@ Private Function getEdgeCellFromRange(ByVal rangeObj As Range, ByVal bottom As B
 End Function
 
 '----------------------------------------------------------------------------</Common>
+
+

@@ -30,10 +30,11 @@ Sub SetSameView()
     Dim collection_books_to_operate As Collection
     Dim obj_book_to_activate As Workbook
     
-    SetSameViewFormMod.Show
+    'フォームの表示 & ユーザー選択状態の取得
+    formEndsIn = SetSameViewFormMod.showForm()
     
     'フォーム状態確認
-    If SetSameViewFormMod.hided_in <> vbOK Then
+    If formEndsIn <> vbOK Then
         Exit Sub
     
     ElseIf Not (IsNumeric(SetSameViewFormMod.txtbx_zoom_level.Value)) Then 'zoom level が数値型でない場合
