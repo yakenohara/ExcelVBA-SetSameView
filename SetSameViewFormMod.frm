@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} SetSameViewFormMod 
    Caption         =   "SetSameView"
-   ClientHeight    =   8250.001
+   ClientHeight    =   8250
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   5970
@@ -13,7 +13,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 '<License>------------------------------------------------------------
 '
 ' Copyright (c) 2019 Shinnosuke Yakenohara
@@ -237,21 +236,32 @@ Private Sub buttn_set_all_as_current_Click()
         
         If ActiveWindow.Panes.Count = 4 Then '画面4分割の場合
             Set p1 = ActiveWindow.Panes(1)
-            Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
-            Set px_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1)
+            Set p1_bottomRightCell = getEdgeCellFromRange( _
+                rangeObj:=p1.VisibleRange, _
+                bottom:=True, _
+                right:=True _
+            ) 'pane(1)の範囲の右下のセルを取得
+            Set px_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1) 'pane(1)の範囲の1つ右下を設定
             
         Else '2分割の場合
         
             If ActiveWindow.SplitRow = 0 Then '左右2分割の場合
-                'todo ActiveWindow.Panes(1).VisibleRange の右上のセルの一つ右のセルにする
-'                Set p1 = ActiveWindow.Panes(1)
-'                Set xx = p1.VisibleRange
-'                Set p1_bottomRightCell = p1.VisibleRange.Item(p1.VisibleRange.Count)
-                Set px_topLeftCell = Cells(1, ActiveWindow.SplitColumn + 1)
+                Set p1 = ActiveWindow.Panes(1)
+                Set p1_topRightCell = getEdgeCellFromRange( _
+                    rangeObj:=p1.VisibleRange, _
+                    bottom:=False, _
+                    right:=True _
+                ) 'pane(1)の範囲の右上のセルを取得
+                Set px_topLeftCell = Cells(1, p1_topRightCell.Column + 1) 'pane(1)の範囲の1つ右を設定
             
             Else '上下2分割の場合 (ActiveWindow.SplitColumn = 0 の場合)
-                'todo ActiveWindow.Panes(1).VisibleRange の左下のセルの一つ下のセルにする
-                Set px_topLeftCell = Cells(ActiveWindow.SplitRow + 1, 1)
+                Set p1 = ActiveWindow.Panes(1)
+                Set p1_bottomLeftCell = getEdgeCellFromRange( _
+                    rangeObj:=p1.VisibleRange, _
+                    bottom:=True, _
+                    right:=False _
+                ) 'pane(1)の範囲の左下のセルを取得
+                Set px_topLeftCell = Cells(p1_bottomLeftCell.Row + 1, 1) 'pane(1)の範囲の1つ下を設定
                 
             End If
         
@@ -315,6 +325,9 @@ End Sub
 
 '<Common>-----------------------------------------------------------------------------
 
+'
+' デフォルト設定を反映させる
+'
 Private Sub setDefault()
     
     '初期化
@@ -378,6 +391,38 @@ TOP_LEFT_CELL_IS_NOT_DEFINED:
     
 End Function
 
+'
+' Rangeオブジェクトの左上/右上/左下/右下のセルを返す
+'
+Private Function getEdgeCellFromRange(ByVal rangeObj As Range, ByVal bottom As Boolean, ByVal right As Boolean) As Range
+    
+    '変数
+    Dim ret As Range
+    Dim rowOffset As Long
+    Dim colOffset As Long
+    
+    'Range 左上からの Row 相対位置の算出
+    If bottom Then '最下部取得指定の場合
+        rowOffset = rangeObj.Rows.Count - 1
+    Else '最上部取得指定の場合
+        rowOffset = 0
+    End If
+    
+    'Range 左上からの Column 相対位置の算出
+    If right Then '最右部取得指定の場合
+        colOffset = rangeObj.Columns.Count - 1
+    Else '最左部取得指定の場合
+        colOffset = 0
+    End If
+    
+    '返却値設定
+    Set ret = rangeObj.Parent.Cells( _
+        rangeObj.Item(1).Row + rowOffset, _
+        rangeObj.Item(1).Column + colOffset _
+    )
+    
+    Set getEdgeCellFromRange = ret '返却
+
+End Function
+
 '----------------------------------------------------------------------------</Common>
-
-
