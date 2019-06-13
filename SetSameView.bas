@@ -20,180 +20,243 @@ Attribute VB_Name = "SetSameView"
 
 Sub SetSameView()
 
-    '変数宣言
-    Dim obj_sheet As Object
-    Dim int_zoom_level As Integer
-    Dim bool_top_left_option_enabled As Boolean
-    Dim str_top_left_address_of_view As String
-    Dim str_range_address_to_select As String
-    Dim str_sheet_name_to_activate As String
-    Dim collection_books_to_operate As Collection
-    Dim obj_book_to_activate As Workbook
-    
     'フォームの表示 & ユーザー選択状態の取得
     formEndsIn = SetSameViewFormMod.showForm()
+
+    'フォームは ウィンドウ右上 `×` クリックもしくは Alt + F4 でウィドウクローズ された
+    If formEndsIn = vbAbort Then
+        Exit Sub '何もせず終了
+    End If
     
     'フォーム状態確認
-    If formEndsIn <> vbOK Then
-        Exit Sub
+    If formEndsIn = vbOK Then
     
-    ElseIf Not (IsNumeric(SetSameViewFormMod.txtbx_zoom_level.Value)) Then 'zoom level が数値型でない場合
-        retOfMsgBox = MsgBox("Invalid Zoom level type:`" & TypeName(SetSameViewFormMod.txtbx_zoom_level.Value) & "` specified", vbCritical)
-        Exit Sub '終了
-    
+        '<フォームの設定内容の型チェック>-----------------------------------------------------------------
+        Dim bool_type_ok As Boolean: bool_type_ok = True  'OKを格納する(NG になったときだけ、 False にする)
+        
+        'Zoom level text box のチェック
+        Dim int_tmp_val As Integer
+        bool_is_int = cIntSafely(SetSameViewFormMod.txtbx_zoom_level.Value, int_tmp_val) 'Zoom level を取得 & Integer 変換可能かどうかチェック
+        If Not (bool_is_int) Then 'Zoom level の設定値は Integer に変換不可能
+            retOfMsgBox = MsgBox("Invalid Zoom level :`" & int_tmp_val & "` specified", vbCritical) 'エラーをメッセージで表示
+            bool_type_ok = False
+        End If
+        '----------------------------------------------------------------</フォームの設定内容の型チェック>
+        
+        If (bool_type_ok) Then 'フォーム設定内容の型チェック OK の場合
+            
+            'フォームの設定内容の取得
+            Dim dict_view_setting As Object
+            Set dict_view_setting = CreateObject("Scripting.Dictionary")
+            
+            With dict_view_setting
+                .Add "prop_int_zoom_level", int_tmp_val
+                .Add "prop_bool_top_left_option_enabled", SetSameViewFormMod.chkbx_top_left.Value
+                .Add "prop_str_top_left_address_of_view", SetSameViewFormMod.txtbx_top_left_address_of_view.Value
+                .Add "prop_str_range_address_to_select", SetSameViewFormMod.txtbx_range_address_to_select.Value
+                .Add "prop_str_sheet_name_to_activate", SetSameViewFormMod.cmbbx_sheet_name_to_activate.Value
+                .Add "prop_bool_minimize_ribbon_option_enabled", SetSameViewFormMod.chkbx_minimize_ribbon.Value
+                .Add "prop_bool_all_books_option_enabled", SetSameViewFormMod.chkbx_all_books.Value
+            End With
+            
+            'View反映
+            Application.ScreenUpdating = False
+            Call satSameViewIterator(dict_view_setting)
+            Application.ScreenUpdating = True
+
+            MsgBox "Done!"
+            
+        'Note
+        '  フォーム設定内容の型チェック NG の場合のメッセージ処理は、
+        '  <フォームの設定内容の型チェック></フォームの設定内容の型チェック>
+        '  の内部で行う
+            
+        End If
+
     End If
-                                      
-    '表示倍率の取得
-    On Error GoTo C_INT_FUNC_OVERFLOWED
-    int_zoom_level = CInt(SetSameViewFormMod.txtbx_zoom_level.Value)
+
+    'フォーム開放
+    Unload SetSameViewFormMod
     
-    bool_top_left_option_enabled = SetSameViewFormMod.chkbx_top_left
-    
-    'フォーカス位置取得
-    str_top_left_address_of_view = SetSameViewFormMod.txtbx_top_left_address_of_view
-    str_range_address_to_select = SetSameViewFormMod.txtbx_range_address_to_select
-    str_sheet_name_to_activate = SetSameViewFormMod.cmbbx_sheet_name_to_activate.Text
-    Application.ScreenUpdating = False
+End Sub
+
+Private Sub satSameViewIterator(ByVal dict_view_setting As Object)
+
+    '<処理対象 WorkBook を collection 化>------------------------------------------------------
     
     Set collection_books_to_operate = New Collection
-    
-    If SetSameViewFormMod.chkbx_all_books.Value Then 'すべてのブック処理の場合
-        
+
+    If dict_view_setting.Item("prop_bool_all_books_option_enabled") Then 'すべてのブック処理の場合
+       
         For Each wbk In Workbooks
             If Windows(wbk.Name).Visible Then 'Visible == ture なWorkBookのみ処理する
                 collection_books_to_operate.Add wbk
             End If
         Next
-    
+   
     Else 'AcriveWorkBookのみの場合
         collection_books_to_operate.Add ActiveWorkbook
-        
+       
     End If
+
+    '-----------------------------------------------------</処理対象 WorkBook を collection 化>
     
+    Set obj_book_to_activate = ActiveWorkbook '処理終了時にアクティブにするブックを記録
+
+    Dim str_top_left_address_of_view As String
+    Dim str_range_address_to_select As String
     
-    'カーソル位置修正・表示倍率変更
-    On Error GoTo ZOOM_FAILED
-    Set obj_book_to_activate = ActiveWorkbook
-    
+    'View設定ループ
     For Each bk In collection_books_to_operate
-        
+       
         bk.Activate
-        
+       
         'ribbon
         bool_ribbon_is_minimized = Application.CommandBars.GetPressedMso("MinimizeRibbon")
-        If (bool_ribbon_is_minimized <> SetSameViewFormMod.chkbx_minimize_ribbon.Value) Then 'リボンの 表示 / 非表示状態が 設定値と異なる場合
+        If (bool_ribbon_is_minimized <> dict_view_setting.Item("prop_bool_minimize_ribbon_option_enabled")) Then 'リボンの 表示 / 非表示状態が 設定値と異なる場合
             Application.CommandBars.ExecuteMso "MinimizeRibbon" 'リボン表示 / 非表示の切り替え
         End If
-        
-        shtFound = False
-        
+       
+        bool_found_sheet_to_activate = False 'アクティブ化 対象シートの存在
+
         For Each obj_sheet In bk.Sheets
-            
+           
             obj_sheet.Activate
-            
-            ActiveWindow.Zoom = int_zoom_level
-            
-            If bool_top_left_option_enabled Then
-            
-                If ActiveWindow.FreezePanes Then 'ウィンドウ枠固定が有効の場合
-                    
-                    'unfreezed pain 範囲のの左上セルのアドレスを算出
-                    
-                    Dim px_topLeftCell As Range
-                    
-                    If ActiveWindow.Panes.Count = 4 Then '画面4分割の場合
-                        Set p1 = ActiveWindow.Panes(1)
-                        Set p1_bottomRightCell = getEdgeCellFromRange( _
-                            rangeObj:=p1.VisibleRange, _
-                            bottom:=True, _
-                            right:=True _
-                        ) 'pane(1)の範囲の右下のセルを取得
-                        Set px_topLeftCell = Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1) 'pane(1)の範囲の1つ右下を設定
-                        
-                    Else '2分割の場合
-                    
-                        If ActiveWindow.SplitRow = 0 Then '左右2分割の場合
-                            Set p1 = ActiveWindow.Panes(1)
-                            Set p1_topRightCell = getEdgeCellFromRange( _
-                                rangeObj:=p1.VisibleRange, _
-                                bottom:=False, _
-                                right:=True _
-                            ) 'pane(1)の範囲の右上のセルを取得
-                            Set px_topLeftCell = Cells(1, p1_topRightCell.Column + 1) 'pane(1)の範囲の1つ右を設定
-                        
-                        Else '上下2分割の場合 (ActiveWindow.SplitColumn = 0 の場合)
-                            Set p1 = ActiveWindow.Panes(1)
-                            Set p1_bottomLeftCell = getEdgeCellFromRange( _
-                                rangeObj:=p1.VisibleRange, _
-                                bottom:=True, _
-                                right:=False _
-                            ) 'pane(1)の範囲の左下のセルを取得
-                            Set px_topLeftCell = Cells(p1_bottomLeftCell.Row + 1, 1) 'pane(1)の範囲の1つ下を設定
-                            
-                        End If
-                    
-                    End If
+
+            If dict_view_setting.Item("prop_bool_top_left_option_enabled") Then '左上セルにあわせた View 設定指定の場合
+
+                Set range_tmp = getTopLeftCellOfUnfreezedPane(ActiveWindow)
+                str_top_left_address_of_view = range_tmp.Address
+                str_range_address_to_select = range_tmp.Address
+
+            Else '左上セルにあわせた View 設定指定が無効(=form の text box で指定した Cell Address を使用する指定)の場合
                 
-                    str_top_left_address_of_view = px_topLeftCell.Address
-                    str_range_address_to_select = px_topLeftCell.Address
-                    
-                Else
-                    str_top_left_address_of_view = "A1"
-                    str_range_address_to_select = "A1"
-                
-                End If
-                
+                str_top_left_address_of_view = dict_view_setting.Item("prop_str_top_left_address_of_view")
+                str_range_address_to_select = dict_view_setting.Item("prop_str_range_address_to_select")
+
             End If
-            
+           
+            On Error GoTo EXCEPTION_VIEW_SET_FAILED
+            ActiveWindow.Zoom = dict_view_setting.Item("prop_int_zoom_level")
             ActiveWindow.ScrollRow = Range(str_top_left_address_of_view).Row
             ActiveWindow.ScrollColumn = Range(str_top_left_address_of_view).Column
             Range(str_range_address_to_select).Select
-            
-            
-            If obj_sheet.Name = str_sheet_name_to_activate Then
-                shtFound = True
+            On Error GoTo 0
+
+            'アクティブ化 対象シートかどうかチェック
+            If obj_sheet.Name = dict_view_setting.Item("prop_str_sheet_name_to_activate") Then
+                bool_found_sheet_to_activate = True
             End If
-            
+           
         Next obj_sheet
-        
+       
         'フォーカスシートの設定
-        If shtFound Then 'フォーカスすべきシートが存在する
-            bk.Worksheets(str_sheet_name_to_activate).Activate
-            
+        If bool_found_sheet_to_activate Then 'フォーカスすべきシートが存在する
+            bk.Worksheets(dict_view_setting.Item("prop_str_sheet_name_to_activate")).Activate
+           
         Else 'フォーカスすべきシートが存在しない
             bk.Worksheets(1).Activate '先頭のシートを選択
-            
+           
         End If
-    
+   
     Next bk
-    
-    obj_book_to_activate.Activate
-    
-    Application.ScreenUpdating = True
-    MsgBox "Done!"
-    
+   
+    obj_book_to_activate.Activate '処理開始時のブックを Active に戻す
     Exit Sub
+
+EXCEPTION_VIEW_SET_FAILED:
     
-C_INT_FUNC_OVERFLOWED:
     retOfMsg = MsgBox( _
-        "Cannot cast into Integer specified zoom level:`" & str(SetSameViewFormMod.txtbx_zoom_level.Value) & "`", _
+        "Exception occurred. As a cause, Specified zoom level or cursor format may be invalid", _
         vbCritical _
     )
-    
+
     Exit Sub
-    
-ZOOM_FAILED:
-    'todo グラフだけを表示しているシートを表示中の場合にここにきてしまう
-    Application.ScreenUpdating = True
-    retOfMsg = MsgBox( _
-        "Exception occurred. As a cause, Specified display magnification or cursor format may be invalid", _
-        vbCritical _
-    )
-    
-    Exit Sub
-    
+
 End Sub
 
+'
+' String を Integer に変換する
+' 成功したら TRUE, 失敗したら FALSE を返す
+'
+Private Function cIntSafely(ByVal fromThisString As String, ByRef toThisInt As Integer) As Boolean
+
+    Dim ret As Boolean
+    
+    If Not (IsNumeric(fromThisString)) Then '数値に変換不可能な場合
+        
+        ret = False '失敗を格納
+    
+    Else '数値に変換可能な場合
+        
+        On Error GoTo EXCEPTION_OVERFLOWED 'CInt() でオーバーフローの場合は EXCEPTION_OVERFLOWED に Go
+        toThisInt = CInt(fromThisString) '指定変数に格納
+        ret = True
+        
+    End If
+    
+    cIntSafely = ret '成功 / 失敗状態を返却
+    Exit Function
+    
+EXCEPTION_OVERFLOWED:
+    ret = False '失敗を格納
+    cIntSafely = ret
+    Exit Function
+        
+    
+End Function
+
+'
+'unfreezed な pain 範囲の左上セルのアドレスを取得する
+'
+Private Function getTopLeftCellOfUnfreezedPane(ByVal obj_window As Window) As Range
+
+    Dim px_topLeftCell As Range
+
+    If obj_window.FreezePanes Then 'freeze pain 有効の場合
+    
+        
+        If obj_window.Panes.Count = 4 Then '画面4分割の場合
+            Set p1 = obj_window.Panes(1)
+            Set p1_bottomRightCell = getEdgeCellFromRange( _
+                rangeObj:=p1.VisibleRange, _
+                bottom:=True, _
+                right:=True _
+            ) 'pane(1)の範囲の右下のセルを取得
+            Set px_topLeftCell = obj_window.ActiveSheet.Cells(p1_bottomRightCell.Row + 1, p1_bottomRightCell.Column + 1) 'pane(1)の範囲の1つ右下を設定
+            
+        Else '2分割の場合
+        
+            If obj_window.SplitRow = 0 Then '左右2分割の場合
+                Set p1 = obj_window.Panes(1)
+                Set p1_topRightCell = getEdgeCellFromRange( _
+                    rangeObj:=p1.VisibleRange, _
+                    bottom:=False, _
+                    right:=True _
+                ) 'pane(1)の範囲の右上のセルを取得
+                Set px_topLeftCell = obj_window.ActiveSheet.Cells(1, p1_topRightCell.Column + 1) 'pane(1)の範囲の1つ右を設定
+            
+            Else '上下2分割の場合 (obj_window.SplitColumn = 0 の場合)
+                Set p1 = obj_window.Panes(1)
+                Set p1_bottomLeftCell = getEdgeCellFromRange( _
+                    rangeObj:=p1.VisibleRange, _
+                    bottom:=True, _
+                    right:=False _
+                ) 'pane(1)の範囲の左下のセルを取得
+                Set px_topLeftCell = obj_window.ActiveSheet.Cells(p1_bottomLeftCell.Row + 1, 1) 'pane(1)の範囲の1つ下を設定
+                
+            End If
+        
+        End If
+
+    Else
+        Set px_topLeftCell = obj_window.ActiveSheet.Cells(1, 1) 'A1 セルを返す
+        
+    End If
+
+    Set getTopLeftCellOfUnfreezedPane = px_topLeftCell
+
+End Function
 '
 ' Rangeオブジェクトの左上/右上/左下/右下のセルを返す
 '
