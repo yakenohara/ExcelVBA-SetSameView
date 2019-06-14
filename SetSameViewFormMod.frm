@@ -59,11 +59,11 @@ Private bool_change_event_enabled As Boolean
 '
 ' 返却値型は MsgBox 関数と同じ(※) 型・意味とし、以下3種類のみを使用する
 '
-' | Constant | Value | Description                                                      |
-' | -------- | ----- | ---------------------------------------------------------------  |
-' | vbOK     | 1     | OK押下                                                           |
-' | vbCancel | 2     | Cancel押下                                                       |
-' | vbAbort  | 3     | ウィンドウ右上 `×` クリックもしくは Alt + F4 でウィドウクローズ |
+' | Constant | Value | Description                                                     |
+' | -------- | ----- | --------------------------------------------------------------- |
+' | vbOK     | 1     | OK押下                                                          |
+' | vbCancel | 2     | Cancel押下                                                      |
+' | vbAbort  | 3     | ウィンドウ右上 `x` クリックもしくは Alt + F4 でウィドウクローズ |
 '
 ' ※
 ' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/msgbox-function
@@ -86,7 +86,7 @@ Public Function showForm()
 
     Me.Show
     ' ↑
-    ' | この間に GUI 操作
+    ' ｜ この間に GUI 操作
     ' ↓
     showForm = ended_in 'ユーザー選択内容の返却
     
@@ -326,7 +326,7 @@ Private Sub setCurrent()
     Dim range_imaginary_top_left_cell As Range
     Dim range_address_to_select As Range
 
-    '<画面表示エリアの TopLeftCell 算出>------------------------------------------------------------
+    '<画面表示エリアの TopLeftCell 算出>---------------------------
     
     Dim long_freezed_panes_row_count As Long
     Dim long_freezed_panes_col_count As Long
@@ -366,13 +366,13 @@ Private Sub setCurrent()
     Set range_top_left_cell_of_unfreezed_pane = getTopLeftCellOfUnfreezedPane(ActiveWindow)
 
     Set range_imaginary_top_left_cell = ActiveWindow.ActiveSheet.Cells( _
-        range_top_left_cell_of_unfreezed_pane.Row - long_freezed_panes_row_count, _
-        range_top_left_cell_of_unfreezed_pane.Column - long_freezed_panes_col_count _
+        ActiveWindow.ScrollRow - long_freezed_panes_row_count, _
+        ActiveWindow.ScrollColumn - long_freezed_panes_col_count _
     )
 
-    '-----------------------------------------------------------</画面表示エリアの TopLeftCell 算出>
+    '--------------------------</画面表示エリアの TopLeftCell 算出>
 
-    '<Selection が示す Range 算出>------------------------------------------------------------------
+    '<Selection が示す Range 算出>---------------------------------
 
     If (TypeName(Selection) = "Range") Then '選択中の Object が Range の場合
     
@@ -408,7 +408,7 @@ Private Sub setCurrent()
         
     End If
 
-    '-----------------------------------------------------------------</Selection が示す Range 算出>
+    '--------------------------------</Selection が示す Range 算出>
     
     bool_change_event_enabled = False
 
@@ -519,7 +519,7 @@ Private Function getTopLeftCellOfUnfreezedPane(ByVal obj_window As Window) As Ra
                     bottom:=False, _
                     right:=True _
                 ) 'pane(1)の範囲の右上のセルを取得
-                Set px_topLeftCell = obj_window.ActiveSheet.Cells(1, p1_topRightCell.Column + 1) 'pane(1)の範囲の1つ右を設定
+                Set px_topLeftCell = obj_window.ActiveSheet.Cells(1, p1_topRightCell.Column + 1) 'pane(1)の範囲の1つ右列の一番上を設定
             
             Else '上下2分割の場合 (obj_window.SplitColumn = 0 の場合)
                 Set p1 = obj_window.Panes(1)
@@ -528,7 +528,7 @@ Private Function getTopLeftCellOfUnfreezedPane(ByVal obj_window As Window) As Ra
                     bottom:=True, _
                     right:=False _
                 ) 'pane(1)の範囲の左下のセルを取得
-                Set px_topLeftCell = obj_window.ActiveSheet.Cells(p1_bottomLeftCell.Row + 1, 1) 'pane(1)の範囲の1つ下を設定
+                Set px_topLeftCell = obj_window.ActiveSheet.Cells(p1_bottomLeftCell.Row + 1, 1) 'pane(1)の範囲の1つ下行の一番左を設定
                 
             End If
         
@@ -542,6 +542,7 @@ Private Function getTopLeftCellOfUnfreezedPane(ByVal obj_window As Window) As Ra
     Set getTopLeftCellOfUnfreezedPane = px_topLeftCell
 
 End Function
+
 '
 ' Rangeオブジェクトの左上/右上/左下/右下のセルを返す
 '
@@ -577,4 +578,5 @@ Private Function getEdgeCellFromRange(ByVal rangeObj As Range, ByVal bottom As B
 End Function
 
 '----------------------------------------------------------------------------</Common>
+
 

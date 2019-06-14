@@ -61,10 +61,12 @@ Sub SetSameView()
             
             'View反映
             Application.ScreenUpdating = False
-            Call satSameViewIterator(dict_view_setting)
+            ret = satSameViewIterator(dict_view_setting)
             Application.ScreenUpdating = True
 
-            MsgBox "Done!"
+            If ret Then
+                MsgBox "Done!"
+            End If
             
         'Note
         '  フォーム設定内容の型チェック NG の場合のメッセージ処理は、
@@ -80,7 +82,7 @@ Sub SetSameView()
     
 End Sub
 
-Private Sub satSameViewIterator(ByVal dict_view_setting As Object)
+Private Function satSameViewIterator(ByVal dict_view_setting As Object) As Boolean
 
     '<処理対象 WorkBook を collection 化>------------------------------------------------------
     
@@ -162,7 +164,8 @@ Private Sub satSameViewIterator(ByVal dict_view_setting As Object)
     Next bk
    
     obj_book_to_activate.Activate '処理開始時のブックを Active に戻す
-    Exit Sub
+    satSameViewIterator = True
+    Exit Function
 
 EXCEPTION_VIEW_SET_FAILED:
     
@@ -170,10 +173,11 @@ EXCEPTION_VIEW_SET_FAILED:
         "Exception occurred. As a cause, Specified zoom level or cursor format may be invalid", _
         vbCritical _
     )
+    
+    satSameViewIterator = False
+    Exit Function
 
-    Exit Sub
-
-End Sub
+End Function
 
 '
 ' String を Integer に変換する
