@@ -124,25 +124,39 @@ Private Function satSameViewIterator(ByVal dict_view_setting As Object) As Boole
         For Each obj_sheet In bk.Sheets
            
             obj_sheet.Activate
-
+            Set range_top_left_of_unfreezed_pain = getTopLeftCellOfUnfreezedPane(ActiveWindow)
+            Dim range_top_left_of_specified As Range
+            
+            On Error GoTo EXCEPTION_VIEW_SET_FAILED
+            
             If dict_view_setting.Item("prop_bool_top_left_option_enabled") Then '左上セルにあわせた View 設定指定の場合
 
-                Set range_tmp = getTopLeftCellOfUnfreezedPane(ActiveWindow)
-                str_top_left_address_of_view = range_tmp.Address
-                str_range_address_to_select = range_tmp.Address
+                str_top_left_address_of_view = range_top_left_of_unfreezed_pain.Address
+                str_range_address_to_select = range_top_left_of_unfreezed_pain.Address
+                Set range_top_left_of_specified = Range(str_range_address_to_select)
 
             Else '左上セルにあわせた View 設定指定が無効(=form の text box で指定した Cell Address を使用する指定)の場合
                 
                 str_top_left_address_of_view = dict_view_setting.Item("prop_str_top_left_address_of_view")
                 str_range_address_to_select = dict_view_setting.Item("prop_str_range_address_to_select")
+                
+                Set range_imaginary_top_left_of_specified = Range(str_top_left_address_of_view)
+                arr_imaginary_p1_range_count = getImaginaryPane1_sRangeCount(ActiveWindow)
+                long_lbound = LBound(arr_imaginary_p1_range_count)
+                
+                '
+                Set range_top_left_of_specified = Cells( _
+                    range_imaginary_top_left_of_specified.Row + arr_imaginary_p1_range_count(long_lbound), _
+                    range_imaginary_top_left_of_specified.Column + arr_imaginary_p1_range_count(long_lbound + 1) _
+                )
 
             End If
-           
-            On Error GoTo EXCEPTION_VIEW_SET_FAILED
+            
             ActiveWindow.Zoom = dict_view_setting.Item("prop_int_zoom_level")
-            ActiveWindow.ScrollRow = Range(str_top_left_address_of_view).Row
-            ActiveWindow.ScrollColumn = Range(str_top_left_address_of_view).Column
+            ActiveWindow.ScrollRow = range_top_left_of_specified.Row
+            ActiveWindow.ScrollColumn = range_top_left_of_specified.Column
             Range(str_range_address_to_select).Select
+            
             On Error GoTo 0
 
             'アクティブ化 対象シートかどうかチェック
@@ -261,6 +275,53 @@ Private Function getTopLeftCellOfUnfreezedPane(ByVal obj_window As Window) As Ra
     Set getTopLeftCellOfUnfreezedPane = px_topLeftCell
 
 End Function
+
+'
+' 左上にFreezed Pane が存在すると仮定した場合の、
+' その Pane のセル専有範囲(rows.count, columns.count)配列を算出して返す
+'
+Private Function getImaginaryPane1_sRangeCount(ByVal obj_window As Window) As Variant
+    
+    Dim arr_ret As Variant '返却値
+    
+    If obj_window.FreezePanes Then 'freeze pain 有効の場合
+    
+        
+        If obj_window.Panes.Count = 4 Then '画面4分割の場合
+            Set p1 = obj_window.Panes(1)
+            arr_ret = Array( _
+                p1.VisibleRange.Rows.Count, _
+                p1.VisibleRange.Columns.Count _
+            )
+            
+        Else '2分割の場合
+        
+            If obj_window.SplitRow = 0 Then '左右2分割の場合
+                Set p1 = obj_window.Panes(1)
+                arr_ret = Array( _
+                    0, _
+                    p1.VisibleRange.Columns.Count _
+                )
+            
+            Else '上下2分割の場合 (obj_window.SplitColumn = 0 の場合)
+                Set p1 = obj_window.Panes(1)
+                arr_ret = Array( _
+                    p1.VisibleRange.Rows.Count, _
+                    0 _
+                )
+                
+            End If
+        
+        End If
+
+    Else
+        arr_ret = Array(0, 0) '範囲0 で返す
+        
+    End If
+
+    getImaginaryPane1_sRangeCount = arr_ret
+
+End Function
 '
 ' Rangeオブジェクトの左上/右上/左下/右下のセルを返す
 '
@@ -294,4 +355,6 @@ Private Function getEdgeCellFromRange(ByVal rangeObj As Range, ByVal bottom As B
     Set getEdgeCellFromRange = ret '返却
 
 End Function
+
+
 
